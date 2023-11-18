@@ -31,6 +31,9 @@ Make sure you have the following installed on your machine:
  - This project is licensed under the MIT - see the LICENSE.md file for details.
  - https://github.com/allen246/food-delivery-system/blob/main/LICENSE
 
+## DB Architecture
+![image](https://github.com/allen246/food-delivery-system/assets/59170514/c3c92a91-63e0-46db-94fd-2a5a4fff49bb)
+
 
 ### Developer information
 Name - Allen Jose
