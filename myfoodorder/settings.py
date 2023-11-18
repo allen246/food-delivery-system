@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "food_order_api",
-    "drf_yasg"
+    "drf_yasg",
 ]
 
 
@@ -49,8 +49,8 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
-    'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100,
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 100,
 }
 
 # DATABASES = {
@@ -68,7 +68,7 @@ DATABASES = {
         "NAME": os.environ.get("POSTGRES_DB", "postgres"),
         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
         "HOST": os.environ.get(
-            "PG_HOST", "localhost"
+            "POSTGRES_HOST", "localhost"
         ),  # uses the container if set, otherwise it runs locally
     }
 }
@@ -147,12 +147,8 @@ CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
 
 SWAGGER_SETTINGS = {
-   'USE_SESSION_AUTH': False,
-   'SECURITY_DEFINITIONS': {
-      'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header'
-      }
-   }
+    "USE_SESSION_AUTH": False,
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
+    },
 }

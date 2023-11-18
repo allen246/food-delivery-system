@@ -23,7 +23,7 @@ from food_order_api.utils import CustomOpenAPISchemaGenerator
 schema_view = get_schema_view(
     openapi.Info(
         title="Snippet API",
-        default_version='v1',
+        default_version="v1",
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
@@ -32,8 +32,11 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
-    path('doc/', schema_view.with_ui('swagger', cache_timeout=0),
-         name='schema-swagger-ui'),
+    path(
+        "doc/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
     path("admin/", admin.site.urls),
     path("api/", include("food_order_api.urls")),
 ]

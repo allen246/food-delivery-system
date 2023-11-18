@@ -57,6 +57,7 @@ class UserCreateView(generics.CreateAPIView):
         "access": "access_token_value"
     }
     """
+
     serializer_class = UserSerializer
     queryset = UserModel.objects.all()
 
@@ -65,9 +66,9 @@ class UserCreateView(generics.CreateAPIView):
         Create a new user profile and return refresh and access tokens.
         """
         # Check if the user is not authenticated and has no 'is_admin' attribute
-        if not all([hasattr(request.user, 'is_admin')]):
+        if not all([hasattr(request.user, "is_admin")]):
             # To prevent anyone from creating an delivery agent as a user
-            request.data.update({'user_type': 'user'})
+            request.data.update({"user_type": "user"})
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -77,8 +78,6 @@ class UserCreateView(generics.CreateAPIView):
                 status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 class UserListView(generics.ListAPIView):
@@ -97,6 +96,7 @@ class UserListView(generics.ListAPIView):
     - Response: A response containing a list of user profiles with associated order details.
     ```
     """
+
     serializer_class = UserSerializer
     permission_classes = [AdminPermission]
 
@@ -122,6 +122,7 @@ class UserListView(generics.ListAPIView):
                 user_id=data.get("id")
             ).aggregate(total_amount=Sum("total_amount"), order_count=Count("id"))
         return Response(response_data)
+
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -155,10 +156,10 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserModel.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AdminPermission | UserPermission]
-    allowed_methods = ['GET', 'PUT', 'DELETE']
+    allowed_methods = ["GET", "PUT", "DELETE"]
 
     def destroy(self, request, *args, **kwargs):
-        user_id = kwargs.get('pk')
+        user_id = kwargs.get("pk")
         user = get_object_or_404(UserModel, id=user_id)
 
         # Check if the user is trying to delete their own profile
@@ -166,19 +167,29 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
             return self.permission_denied(request)
 
         # Check for pending orders
-        pending_orders = Order.objects.filter(user=user_id, delivery_status='pending').exists()
+        pending_orders = Order.objects.filter(
+            user=user_id, delivery_status="pending"
+        ).exists()
         if request.user.is_user and pending_orders:
-            return Response({'error': 'Cannot delete user with pending orders.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Cannot delete user with pending orders."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Check if the user is an admin
         if request.user.is_admin:
-            return Response({'error': 'Cannot delete admin user.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Cannot delete admin user."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Soft delete the user/delivery agent
         user.is_active = False
         user.save()
 
-        return Response({'message': 'User profile soft deleted.'}, status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"message": "User profile soft deleted."}, status=status.HTTP_204_NO_CONTENT
+        )
 
 
 from rest_framework import viewsets
@@ -188,6 +199,7 @@ from .models import Product
 from .serializers import ProductSerializer
 from .permissions import AdminPermission
 from rest_framework import serializers
+
 
 class ProductAPIView(viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -215,7 +227,6 @@ class ProductAPIView(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
 
 class OrderListCreateView(generics.ListCreateAPIView):
@@ -278,6 +289,7 @@ class OrderListCreateView(generics.ListCreateAPIView):
         response_data["order_id"] = order.id
         return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
 
+
 class OrderItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     API view for retrieving, updating, or canceling a specific order item.
@@ -298,8 +310,9 @@ class OrderItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     Returns:
     - Response: A response containing the serialized order item data upon successful retrieval or update.
     """
+
     serializer_class = DetailOrderSerializer
-    allowed_methods = ['GET', 'PATCH']
+    allowed_methods = ["GET", "PATCH"]
     permission_classes = [permissions.IsAuthenticated]
 
     def validate_delivery_agent(self, delivery_agent_id):
@@ -368,6 +381,7 @@ class OrderItemDetailView(generics.RetrieveUpdateDestroyAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+
 class OTPVerifyView(APIView):
     """
     API view for verifying OTP during order delivery.
@@ -384,6 +398,7 @@ class OTPVerifyView(APIView):
     Returns:
     - Response: A response containing a success message or error message based on the OTP verification result.
     """
+
     permission_classes = [DeliveryAgentPermission]
 
     def post(self, request, order_id):
@@ -410,6 +425,7 @@ class OTPVerifyView(APIView):
                 {"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+
 class ProductBulkCreateView(generics.CreateAPIView):
     """
     API view for bulk creating products asynchronously using Celery.
@@ -425,6 +441,7 @@ class ProductBulkCreateView(generics.CreateAPIView):
     Returns:
     - Response: A response containing the task ID for tracking the progress of the bulk creation task.
     """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
@@ -443,6 +460,7 @@ class ProductBulkCreateView(generics.CreateAPIView):
         task = bulk_create_task.delay(request.data)
         return Response({"task_id": task.id})
 
+
 class CheckProgressView(generics.RetrieveAPIView):
     """
     API view for checking the progress of a Celery task.
@@ -458,6 +476,7 @@ class CheckProgressView(generics.RetrieveAPIView):
     - HTTP_500_INTERNAL_SERVER_ERROR: If the task has failed, returns error information.
     - HTTP_500_INTERNAL_SERVER_ERROR: If the task is in an unknown state, returns unknown information.
     """
+
     def get(self, request, task_id, *args, **kwargs):
         """
         Check the progress of a Celery task.
@@ -501,4 +520,3 @@ class CheckProgressView(generics.RetrieveAPIView):
             # Task is in an unknown state
             unknown_info = {"error": "Unknown task state", "completed": True}
             return Response(unknown_info, status=500)
-
