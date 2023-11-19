@@ -5,6 +5,7 @@ from .serializers import (
     ProductSerializer,
     OrderSerializer,
     DetailOrderSerializer,
+    TaskIdSerializer,
 )
 from django.utils import timezone
 from rest_framework import generics, permissions, status, serializers
@@ -192,41 +193,32 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
         )
 
 
-from rest_framework import viewsets
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Product
-from .serializers import ProductSerializer
-from .permissions import AdminPermission
-from rest_framework import serializers
-
-
 class ProductAPIView(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [AdminPermission]
 
-    def create(self, request, *args, **kwargs):
-        """
-        Create new products.
+    # def create(self, request, *args, **kwargs):
+    #     """
+    #     Create new products.
 
-        Parameters:
-        - `name` (str): The name of the product.
-        - `price` (float): The price of the product.
-        - `description` (str): A brief description of the product.
+    #     Parameters:
+    #     - `name` (str): The name of the product.
+    #     - `price` (float): The price of the product.
+    #     - `description` (str): A brief description of the product.
 
-        Raises:
-        - ValidationError: If no properties are found in the request data.
+    #     Raises:
+    #     - ValidationError: If no properties are found in the request data.
 
-        Returns:
-        - Response: A response containing the serialized product data upon successful creation.
-        """
-        if not request.data:
-            raise serializers.ValidationError({"detail": "No properties are found"})
-        serializer = self.get_serializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     Returns:
+    #     - Response: A response containing the serialized product data upon successful creation.
+    #     """
+    #     if not request.data:
+    #         raise serializers.ValidationError({"detail": "No properties are found"})
+    #     serializer = self.get_serializer(data=request.data, many=True)
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_create(serializer)
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class OrderListCreateView(generics.ListCreateAPIView):
@@ -262,6 +254,7 @@ class OrderListCreateView(generics.ListCreateAPIView):
         Returns:
         - Response: A response containing the serialized order data upon successful creation.
         """
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = (
@@ -275,7 +268,6 @@ class OrderListCreateView(generics.ListCreateAPIView):
         order = Order.objects.create(
             user=user, total_amount=total_amount, payment_option=payment_option
         )
-
         products_data = serializer.validated_data.get("products", [])
         for product_data in products_data:
             product_id = product_data["product"].id
@@ -380,6 +372,25 @@ class OrderItemDetailView(generics.RetrieveUpdateDestroyAPIView):
                     {"error": "You are not permitted to cancel the order."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            if (
+                self.request.user.id == instance.user
+                and order_duration.total_seconds() > 30 * 60
+            ):
+                return Response(
+                    {
+                        "error": "Cannot update orders created more than thirty minutes ago."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        instance.delivery_status = request.data.get("delivery_status", "")
+        delivery_agent_id = request.data.get("delivery_agent", "")
+        if delivery_agent_id:
+            delivery_agent = self.validate_delivery_agent(delivery_agent_id)
+            instance.delivery_agent = delivery_agent
+
+        instance.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
 class OTPVerifyView(APIView):
@@ -433,7 +444,7 @@ class ProductBulkCreateView(generics.CreateAPIView):
     - Bulk Create: POST method to initiate the bulk creation of products.
 
     Permissions:
-    - Only authenticated users can access this view.
+    - Only authenticated admin user can access this view.
 
     Raises:
     - HTTP_200_OK: If the bulk creation task is successfully initiated.
@@ -442,7 +453,8 @@ class ProductBulkCreateView(generics.CreateAPIView):
     - Response: A response containing the task ID for tracking the progress of the bulk creation task.
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ProductSerializer
+    permission_classes = [AdminPermission]
 
     def create(self, request, *args, **kwargs):
         """
@@ -476,6 +488,9 @@ class CheckProgressView(generics.RetrieveAPIView):
     - HTTP_500_INTERNAL_SERVER_ERROR: If the task has failed, returns error information.
     - HTTP_500_INTERNAL_SERVER_ERROR: If the task is in an unknown state, returns unknown information.
     """
+
+    serializer_class = TaskIdSerializer
+    permission_classes = [AdminPermission]
 
     def get(self, request, task_id, *args, **kwargs):
         """

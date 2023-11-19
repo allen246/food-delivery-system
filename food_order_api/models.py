@@ -175,10 +175,13 @@ class Order(models.Model):
                 f"Regards,\n"
                 f"Swiggy"
             )
+            recipient_emails = [instance.user.email]
+            if instance.delivery_agent.email:
+                recipient_emails.append(instance.delivery_agent.email)
             send_mail.delay(
                 f"Order Cancellation - Order ID: {instance.id}",
                 message,
-                [instance.user.email, instance.delivery_agent.email],
+                recipient_emails,
             )
 
 

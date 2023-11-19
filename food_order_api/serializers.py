@@ -94,3 +94,7 @@ class DetailOrderSerializer(serializers.ModelSerializer):
             "delivery_status": {"required": False},
             "delivery_agent": {"required": False},
         }
+
+
+class TaskIdSerializer(serializers.Serializer):
+    task_id = serializers.UUIDField()

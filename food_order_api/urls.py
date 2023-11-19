@@ -24,6 +24,7 @@ urlpatterns = [
     path("user/", UserCreateView.as_view(), name="user"),
     path("users/", UserListView.as_view(), name="user"),
     path("users/<str:pk>/", UserDetailView.as_view(), name="user-detail"),
+    path("products/bulk_create/", ProductBulkCreateView.as_view(), name="bulk_create"),
     path(
         "products/",
         include(router.urls),
@@ -33,9 +34,8 @@ urlpatterns = [
     path(
         "orders/<str:order_id>/verify-otp/", OTPVerifyView.as_view(), name="otp-verify"
     ),
-    path("orders/bulk_create/", ProductBulkCreateView.as_view(), name="bulk_create"),
     path(
-        "orders/check_progress/<str:task_id>/",
+        "check_progress/<str:task_id>/",
         CheckProgressView.as_view(),
         name="check_progress",
     ),
