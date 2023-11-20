@@ -1,0 +1,7 @@
+Hello {{account.user}},
+Your account is successfully registered and the information is as follows:
+Username: {{account.user}}
+Email: {{account.email}}
+Generated Password: {{account.password}}
+This is an auto-generated password. Please change it after logging in.
+Thank you!

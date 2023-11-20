@@ -76,6 +76,7 @@ DATABASES = {
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -137,10 +138,9 @@ SIMPLE_JWT = {
 EMAIL_HOST = os.environ.get("EMAIL_HOST")
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-
-EMAIL_PORT = os.environ.get("EMAIL_PORT")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT"))
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS")
-EMAIL_TIMEOUT = os.environ.get("EMAIL_TIMEOUT")
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT"))
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")

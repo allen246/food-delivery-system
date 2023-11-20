@@ -1,0 +1,11 @@
+Hello {{ order.user }},
+Thank you for placing an order with us!
+
+To verify your order for Order ID: {{ order.id }}, please use the following OTP:
+
+OTP: {{ order.otp }}
+
+Please provide this OTP to the delivery agent during the delivery process.
+
+Regards,
+Swiggy

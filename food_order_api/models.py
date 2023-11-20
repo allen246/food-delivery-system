@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.crypto import get_random_string
 from django.db.models.signals import post_save, post_init
+from django.template.loader import render_to_string
 
 
 class UserManager(BaseUserManager):
@@ -141,18 +142,12 @@ class Order(models.Model):
             # Generate and set the UUID with a prefix only if the ID is not already set
             self.id = generate_uuid_with_prefix("ord")
             self.otp = get_random_string(length=8)
-            message = (
-                f"Hello { self.user.username },\n\n"
-                f"Thank you for placing an order with us! Your order details are as follows:\n\n"
-                f"Order ID: { self.id }\n"
-                f"Total Amount: ${ self.total_amount }\n\n"
-                f"We will send you another email once your order is ready for delivery.\n\n"
-                f"To verify your order for Order ID: { self.id }, please use the following OTP:\n\n"
-                f"OTP: { self.otp }\n\n"
-                f"Please provide this OTP to the delivery agent during the delivery process.\n\n"
-                f"Regards,\n"
-                f"Swiggy"
-            )
+            message = render_to_string('email/otp_verification.txt', {'order': {
+                "id": self.id,
+                "total_amount": self.total_amount,
+                "otp": self.otp,
+                "user": self.user.username
+                }})
             send_mail.delay("Order Confirmation", message, [self.user.email])
         super().save(*args, **kwargs)
 
@@ -166,15 +161,11 @@ class Order(models.Model):
             instance.previous_delivery_status != "canceled"
             and instance.delivery_status == "canceled"
         ):
-            message = (
-                f"Hello {instance.user.username},\n\n"
-                f"We regret to inform you that your order with Order ID: {instance.id} has been canceled.\n"
-                f"Total Amount: ${instance.total_amount}\n\n"
-                f"If you have any concerns or questions, please feel free to contact our customer support.\n\n"
-                f"We appreciate your understanding and hope to serve you better in the future.\n\n"
-                f"Regards,\n"
-                f"Swiggy"
-            )
+            message = render_to_string('email/order_cancellation.txt', {'order': {
+                "id": instance.id,
+                "total_amount": instance.total_amount,
+                "user": instance.user.username
+                }})
             recipient_emails = [instance.user.email]
             if instance.delivery_agent.email:
                 recipient_emails.append(instance.delivery_agent.email)
