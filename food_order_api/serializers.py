@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.utils.crypto import get_random_string
 from .models import User, Product, Order, OrderItem
+from django.template.loader import render_to_string
 from .communication import send_mail
 
 
@@ -27,15 +28,11 @@ class UserSerializer(serializers.ModelSerializer):
         if not validated_data.get("password"):
             validated_data.update({"password": get_random_string(length=8)})
         user = User.objects.create_user(**validated_data)
-        message = (
-            f"Hello {user.username},\n\n"
-            f"Your account is successfully registered and the information is as follows:\n\n"
-            f"Username: {user.username}\n"
-            f"Email: {user.email}\n"
-            f'Generated Password: {validated_data["password"]}\n\n'
-            f"This is an auto-generated password. Please change it after logging in.\n\n"
-            f"Thank you!"
-        )
+        message = render_to_string('email/account creation.txt', {'account': {
+            "user": user.username,
+            "email": user.email,
+            "password": validated_data["password"]
+            }})
         send_mail.delay("Your Account Information", message, [user.email])
         return user
 

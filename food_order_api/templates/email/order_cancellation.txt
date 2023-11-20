@@ -1,0 +1,7 @@
+Hello {{order.username}},
+We regret to inform you that your order with Order ID: {{order.id}} has been canceled
+Total Amount: ${{order.total_amount}}
+If you have any concerns or questions, please feel free to contact our customer support.
+We appreciate your understanding and hope to serve you better in the future.
+Regards
+Swiggy
