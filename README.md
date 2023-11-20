@@ -1,4 +1,4 @@
-# Django Project with Docker
+# Food Delivery System Using DRF
 
 This project is a Django web application running inside a Docker container.
 
